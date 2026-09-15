@@ -135,3 +135,9 @@ jobs:
 
       - name: "4. Phase 1 smoke test - fetchList(ja) and fetchList(en) against the live site"
         run: npx tsx scripts/smoke-fetch.ts
+
+      - name: Wait 2s (crawl etiquette)
+        run: sleep 2
+
+      - name: "5. Phase 2 smoke test - pairReleases() and confirmJaOnly() against the live site"
+        run: npx tsx scripts/smoke-pair.ts
