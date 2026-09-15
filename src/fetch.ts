@@ -1,6 +1,8 @@
 import * as cheerio from "cheerio";
-import { decode } from "he";
+import he from "he";
 import { LIST_URL, ORIGIN, USER_AGENT, type Lang } from "./sources.js";
+
+const { decode } = he;
 
 export interface ReleaseListItem {
   releaseId: string;
