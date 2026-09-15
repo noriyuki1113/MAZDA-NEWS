@@ -33,8 +33,8 @@ jobs:
 
       - name: "2. Release list page - RSS discovery"
         run: |
-          curl -sS -A "$UA" --compressed -L "$LIST_URL" -o list.html
-          echo "Saved $(wc -c < list.html) bytes"
+          status=$(curl -sS -A "$UA" --compressed -L -w '%{http_code}' -o list.html "$LIST_URL")
+          echo "GET $LIST_URL -> HTTP $status, saved $(wc -c < list.html) bytes"
 
           echo "::group::<link rel=alternate ... rss ...> matches"
           grep -ioE '<link[^>]*rel=["'"'"']alternate["'"'"'][^>]*>' list.html || echo "(no <link rel=alternate> tags found)"
@@ -53,8 +53,8 @@ jobs:
 
       - name: "3. Article page - DOM structure"
         run: |
-          curl -sS -A "$UA" --compressed -L "$ARTICLE_URL" -o article.html
-          echo "Saved $(wc -c < article.html) bytes"
+          status=$(curl -sS -A "$UA" --compressed -L -w '%{http_code}' -o article.html "$ARTICLE_URL")
+          echo "GET $ARTICLE_URL -> HTTP $status, saved $(wc -c < article.html) bytes"
 
           echo "::group::<title> and <meta> tags"
           grep -ioE '<title>.*</title>' article.html
