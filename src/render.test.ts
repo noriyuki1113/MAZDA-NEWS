@@ -101,4 +101,35 @@ describe("renderDraft", () => {
     expect(markdown).toContain("paired_count: 0");
     expect(markdown).toContain("## Also from Mazda");
   });
+
+  it("omits the corrections section when there are none", () => {
+    const markdown = renderDraft({
+      date: "2026-09-15",
+      generatedBy: "claude-sonnet-4-6",
+      jdmOnly: [],
+      paired: [],
+    });
+
+    expect(markdown).not.toContain("Corrections");
+  });
+
+  it("renders a corrections line when a pending ja_only was promoted to paired (§4.2)", () => {
+    const markdown = renderDraft({
+      date: "2026-09-15",
+      generatedBy: "claude-sonnet-4-6",
+      jdmOnly: [],
+      paired: [],
+      corrections: [
+        {
+          titleJa: "マツダ、旧型車を発表",
+          urlEn: "https://newsroom.mazda.com/en/publicity/release/2026/202609/260901c.html",
+        },
+      ],
+    });
+
+    expect(markdown).toContain("**Corrections:**");
+    expect(markdown).toContain(
+      '- Mazda has since published an English version of "マツダ、旧型車を発表": [link](https://newsroom.mazda.com/en/publicity/release/2026/202609/260901c.html)',
+    );
+  });
 });

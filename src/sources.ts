@@ -176,3 +176,42 @@ export const LIST_URL: Record<Lang, string> = {
 
 // §3.8: リクエスト間隔は2秒以上
 export const REQUEST_INTERVAL_MS = 2000;
+
+// ============================================================================
+// Phase 4: 除外ルール（§3.7）・PDF専用リリース判定（§3.6）
+// ============================================================================
+
+// §3.7: 株主・投資家情報は全件除外。
+export const FULLY_EXCLUDED_CATEGORY: Record<Lang, string> = {
+  ja: "株主・投資家情報",
+  en: "Investor Relations",
+};
+
+// §3.7: 企業情報カテゴリのうち、これらのキーワードを含むものだけ除外する
+// （人事異動・組織改革・役員人事・採用計画）。日本語版のみで判定する
+// （英語版は記録のみで配信対象にならないため、英語キーワードは定義していない）。
+export const KEYWORD_EXCLUDED_CATEGORY: Lang = "ja";
+export const KEYWORD_EXCLUDED_CATEGORY_LABEL: Record<Lang, string> = {
+  ja: "企業情報",
+  en: "Company Information",
+};
+export const EXCLUDED_TITLE_KEYWORDS = ["人事異動", "組織改革", "役員人事", "採用計画"];
+
+export function isCategoryExcluded(input: { category: string; title: string; lang: Lang }): boolean {
+  if (input.category === FULLY_EXCLUDED_CATEGORY[input.lang]) return true;
+
+  if (
+    input.lang === KEYWORD_EXCLUDED_CATEGORY &&
+    input.category === KEYWORD_EXCLUDED_CATEGORY_LABEL[input.lang]
+  ) {
+    return EXCLUDED_TITLE_KEYWORDS.some((keyword) => input.title.includes(keyword));
+  }
+
+  return false;
+}
+
+// §3.6: タイトルに [PDF形式]/[PDF format] を含み、リンク先が.pdfのものは
+// PDF専用リリース。要約対象外（seen.jsonには記録し再処理を防ぐ）。
+export function isPdfOnly(input: { title: string; url: string }): boolean {
+  return /\[PDF(?:形式|\s*format)\]/i.test(input.title) && input.url.endsWith(".pdf");
+}

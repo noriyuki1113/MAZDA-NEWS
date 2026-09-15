@@ -14,10 +14,17 @@ export interface AlsoFromMazdaEntry {
   publishedAt: string; // YYYY-MM-DD
 }
 
+// §4.2: pendingだったja_onlyが期間内にpairedへ更新された際の訂正1行。
+export interface CorrectionEntry {
+  titleJa: string;
+  urlEn: string;
+}
+
 export interface RenderDraftInput {
   date: string; // YYYY-MM-DD, ドラフトを生成した日
   jdmOnly: JdmOnlyEntry[];
   paired: AlsoFromMazdaEntry[];
+  corrections?: CorrectionEntry[];
   generatedBy: string;
 }
 
@@ -81,20 +88,24 @@ export function renderDraft(input: RenderDraftInput): string {
       .join("\n"),
   ].join("\n");
 
-  return [
-    frontmatter,
-    "",
-    heading,
-    "",
-    jdmSection,
-    "",
-    "---",
-    "",
-    pairedSection,
-    "",
-    "---",
-    "",
-    FOOTER,
-    "",
-  ].join("\n");
+  const corrections = input.corrections ?? [];
+  const correctionsSection =
+    corrections.length === 0
+      ? null
+      : [
+          "**Corrections:**",
+          "",
+          ...corrections.map(
+            (entry) =>
+              `- Mazda has since published an English version of "${entry.titleJa}": [link](${entry.urlEn})`,
+          ),
+        ].join("\n");
+
+  const sections = [frontmatter, "", heading, "", jdmSection, "", "---", "", pairedSection];
+  if (correctionsSection) {
+    sections.push("", "---", "", correctionsSection);
+  }
+  sections.push("", "---", "", FOOTER, "");
+
+  return sections.join("\n");
 }

@@ -1,0 +1,78 @@
+name: Daily Mazda News
+
+# mazda-news-spec.md §10. 日次でsrc/index.tsを実行し、新着があればPRを立てる。
+#
+# 配信対象が0件の日は src/index.ts がdraftを書かずに正常終了する（§6手順8）。
+# その場合はこのワークフローもPRを作らない。除外・en_only分の記録更新は
+# その日のうちは失われるが、翌日以降も同じ入力に対して同じ除外判定を
+# 再現するだけなので実害はない（§6の「無限に繰り返す」という言及は
+# ネットワーク再取得の話ではなく分類のやり直しであり、コスト的に軽微）。
+
+on:
+  schedule:
+    - cron: "0 23 * * *" # UTC 23:00 = JST 8:00
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  daily:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install pnpm
+        run: corepack enable && corepack prepare pnpm@10 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile=false
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Run the daily pipeline
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: npx tsx src/index.ts
+
+      - name: Check whether a draft was generated today
+        id: draft
+        run: |
+          TODAY=$(date -u +%Y-%m-%d)
+          DRAFT_PATH="drafts/$TODAY.md"
+          if [ -f "$DRAFT_PATH" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "date=$TODAY" >> "$GITHUB_OUTPUT"
+            JDM=$(grep -m1 '^jdm_only_count:' "$DRAFT_PATH" | grep -oE '[0-9]+')
+            PAIRED=$(grep -m1 '^paired_count:' "$DRAFT_PATH" | grep -oE '[0-9]+')
+            echo "jdm=$JDM" >> "$GITHUB_OUTPUT"
+            echo "paired=$PAIRED" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "No draft generated today; skipping PR creation."
+          fi
+
+      - name: Create Pull Request
+        if: steps.draft.outputs.exists == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          add-paths: |
+            data/seen.json
+            drafts/*.md
+          commit-message: "News draft: ${{ steps.draft.outputs.date }}"
+          branch: news/${{ steps.draft.outputs.date }}
+          delete-branch: true
+          title: "News draft: ${{ steps.draft.outputs.date }} (${{ steps.draft.outputs.jdm }} JDM-only / ${{ steps.draft.outputs.paired }} paired)"
+          body: |
+            Automated daily run of the JDM Watch / Also from Mazda pipeline.
+
+            - Review the draft under `drafts/`.
+            - `data/seen.json` was updated with today's classifications.
+          committer: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
+          author: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
