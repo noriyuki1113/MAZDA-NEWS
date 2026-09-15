@@ -48,6 +48,47 @@ jobs:
           awk '/<head/{f=1} f{print; n++} /<\/head>/{f=0} n>150{exit}' list.html
           echo "::endgroup::"
 
+      - name: "2b. Release list page - item structure & duplicate check (Phase 1)"
+        run: |
+          echo "::group::Total vs unique release links (href pattern), and .pdf-only links"
+          total_html=$(grep -oE 'href="[^"]*publicity/release/[0-9]{4}/[0-9]{6}/[0-9]{6}[a-z]\.html"' list.html | wc -l)
+          unique_html=$(grep -oE 'href="[^"]*publicity/release/[0-9]{4}/[0-9]{6}/[0-9]{6}[a-z]\.html"' list.html | sort -u | wc -l)
+          total_pdf=$(grep -oE 'href="[^"]*publicity/release/[0-9]{4}/[0-9]{6}/[0-9]{6}[a-z]\.pdf"' list.html | wc -l)
+          echo ".html links: total=$total_html unique=$unique_html   (total>unique means duplicate listing exists)"
+          echo ".pdf-only links found: $total_pdf"
+          echo "::endgroup::"
+
+          echo "::group::Known article (260626a) occurrence count in this list page"
+          grep -c "260626a" list.html || echo "0"
+          echo "::endgroup::"
+
+          echo "::group::Raw HTML around first release link (60 lines of context)"
+          line=$(grep -n 'publicity/release/2026/' list.html | head -1 | cut -d: -f1)
+          if [ -n "$line" ]; then
+            start=$((line>30?line-30:1))
+            end=$((line+30))
+            sed -n "${start},${end}p" list.html
+          else
+            echo "(no match found for publicity/release/2026/)"
+          fi
+          echo "::endgroup::"
+
+          echo "::group::Raw HTML around SECOND occurrence of the known article link (to see the other listing block, if any)"
+          line2=$(grep -n "260626a" list.html | sed -n '2p' | cut -d: -f1)
+          if [ -n "$line2" ]; then
+            start=$((line2>30?line2-30:1))
+            end=$((line2+30))
+            sed -n "${start},${end}p" list.html
+          else
+            echo "(only one occurrence, or article not on this year's list)"
+          fi
+          echo "::endgroup::"
+
+          echo "::group::Year selector / pagination hints"
+          grep -ioE '<select[^>]*>' list.html || echo "(no <select> found)"
+          grep -ioE 'class="[^"]*pag[^"]*"' list.html | sort -u || echo "(no class containing 'pag' found)"
+          echo "::endgroup::"
+
       - name: Wait 2s (crawl etiquette)
         run: sleep 2
 
