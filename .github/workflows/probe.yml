@@ -22,6 +22,18 @@ jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install pnpm
+        run: corepack enable && corepack prepare pnpm@10 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile=false
+
       - name: "1. robots.txt"
         run: |
           echo "::group::GET https://newsroom.mazda.com/robots.txt"
@@ -117,3 +129,9 @@ jobs:
           echo "::group::Full raw HTML (for precise structure confirmation)"
           cat article.html
           echo "::endgroup::"
+
+      - name: Wait 2s (crawl etiquette)
+        run: sleep 2
+
+      - name: "4. Phase 1 smoke test - fetchList(ja) and fetchList(en) against the live site"
+        run: npx tsx scripts/smoke-fetch.ts

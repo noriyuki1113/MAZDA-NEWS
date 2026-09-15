@@ -100,3 +100,79 @@
 //   - この記事はHTML本体に加えて li.c-article__list__item.pdf として同内容の
 //     PDFへのリンクも併載している。これは「PDF専用リリース」(§3.6)とは別物で、
 //     PDF専用判定はタイトル文字列中の "[PDF形式]" 表記の有無で行うこと。
+
+// ----------------------------------------------------------------------------
+// 4. 一覧ページの項目構造（追加調査, run #2, 2026-09-15T05:21 UTC）
+//    GET https://newsroom.mazda.com/ja/publicity/release/ の list.html を再利用
+// ----------------------------------------------------------------------------
+//
+// <li class="c-list04__item">
+//   <a href="
+//       /ja/publicity/release/2026/202606/260626a.html
+//     "
+//   >
+//     <div class="c-list04__img">
+//       <img src="/ja/.../260626a_s.jpg" alt="{タイトル}" onerror="...">
+//     </div>
+//     <div class="c-list04__detail">
+//       <dl class="c-list04__date">
+//         <dt>
+//           <time datetime="2026.06.26">2026.6.26</time>
+//           <span class="c-list04__tag  tag02 ">
+//                   クルマ・技術
+//           </span>
+//         </dt>
+//         <dd>
+//           <p class="c-list04__txt ">
+//               マツダ、「マツダ ロードスター」を商品改良
+//           </p>
+//           <p class="c-ttl04__txt--small pc-only">－走りの魅力をさらに深化、特別仕様車「PS」を新設定－</p>  <!-- 任意 -->
+//         </dd>
+//       </dl>
+//     </div>
+//   </a>
+//   <div class="c-list04__pdf">                                  <!-- ほぼ全項目に併載。PDF専用リリースの目印ではない -->
+//     <a href="/ja/publicity/release/2026/202606/260626a.pdf" target="_blank">...</a>
+//   </div>
+// </li>
+//
+// 【重要】href属性の値は前後に改行・空白を含んだまま複数行にまたがっている
+// （"\n            /ja/.../260626a.html\n        "）。1行ベースの正規表現では
+// 一切マッチしない（実測: 総数=0件）。→ cheerio 等のHTMLパーサでDOMとして
+// 読み、href は必ず .trim() すること。
+//
+// 【重複掲載の実証】既知記事 "260626a" は list.html 内に計6回出現した
+// （メインの<a href>・サムネイル画像src・PDFダウンロードリンクで3回×2ブロック）。
+// §3.5が警告するとおり、カテゴリ別の再掲ブロックにより同一URLが複数回登場する。
+// → URL（trim後の絶対URL）をキーにした重複排除が必須。
+//
+// 【年セレクタ】<select id="pulldown"> に2007〜2026年の <option> がある。
+// 過去記事は年ごとにURLが変わる (/ja/publicity/release/{YYYY}/) が、Phase 1
+// では当年の一覧のみ扱う（過去の一括クロールはしない、§3.8）。
+//
+// 抽出方針:
+//   - コンテナ : li.c-list04__item
+//   - URL      : li > a の href（要 .trim()、相対パスなのでoriginと結合）
+//   - タイトル : p.c-list04__txt のテキスト（要トリム・エンティティデコード・
+//                <br>の空白置換）
+//   - カテゴリ : span.c-list04__tag のテキスト（要トリム）
+//   - 日付     : time[datetime] ではなくURLから抽出（記事ページと同じ方針で統一）
+//   - PDF直リンク(div.c-list04__pdf > a) は項目の副次リンクであり無視してよい
+
+// ============================================================================
+// Phase 1: 収集元定数
+// ============================================================================
+
+export const USER_AGENT = "mazda-news-en/1.0 (+https://github.com/noriyuki1113/mazda-news)";
+
+export const ORIGIN = "https://newsroom.mazda.com";
+
+export type Lang = "ja" | "en";
+
+export const LIST_URL: Record<Lang, string> = {
+  ja: `${ORIGIN}/ja/publicity/release/`,
+  en: `${ORIGIN}/en/publicity/release/`,
+};
+
+// §3.8: リクエスト間隔は2秒以上
+export const REQUEST_INTERVAL_MS = 2000;
