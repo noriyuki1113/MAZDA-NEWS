@@ -89,3 +89,35 @@ export async function fetchList(lang: Lang): Promise<ReleaseListItem[]> {
   const html = await res.text();
   return parseListHtml(html, lang);
 }
+
+export interface ArticleContent {
+  title: string;
+  bodyText: string;
+}
+
+// タイトルは meta[property="og:title"] から（<title>タグはサイト名が混入するため
+// 使わない）。本文は div.c-article__conts 直下のp/li要素をテキストのみ抽出し、
+// 段落単位で結合する（src/sources.ts のPhase 0調査結果を参照）。
+export function parseArticleHtml(html: string): ArticleContent {
+  const $ = cheerio.load(html);
+  const title = cleanText($('meta[property="og:title"]').attr("content") ?? "");
+
+  const paragraphs: string[] = [];
+  $("div.c-article__conts")
+    .find("p, li")
+    .each((_, el) => {
+      const text = cleanText($(el).text());
+      if (text) paragraphs.push(text);
+    });
+
+  return { title, bodyText: paragraphs.join("\n\n") };
+}
+
+export async function fetchArticle(url: string): Promise<ArticleContent> {
+  const res = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
+  if (!res.ok) {
+    throw new Error(`Failed to fetch article ${url}: HTTP ${res.status}`);
+  }
+  const html = await res.text();
+  return parseArticleHtml(html);
+}

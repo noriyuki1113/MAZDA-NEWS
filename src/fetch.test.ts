@@ -1,5 +1,7 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { extractReleaseIdAndDate, parseListHtml } from "./fetch.js";
+import { extractReleaseIdAndDate, parseArticleHtml, parseListHtml } from "./fetch.js";
 
 // このフィクスチャは 2026-09-15 に実際の一覧ページ
 // (https://newsroom.mazda.com/ja/publicity/release/) を GitHub Actions 経由で
@@ -168,5 +170,41 @@ describe("parseListHtml", () => {
   it("decodes an escaped &lt;br&gt; in the title and replaces it with a space (§3.5)", () => {
     const item = items.find((i) => i.releaseId === "260601a");
     expect(item?.title).toBe("マツダ、新商品発表会を開催 東京・大阪の2都市で");
+  });
+});
+
+// 実際の記事ページ (2026-06-26 のロードスター商品改良リリース) をそのまま保存した
+// フィクスチャ。GitHub Actions 経由で取得したもの (src/sources.ts のPhase 0調査結果
+// 参照)。dt/dd と、その中のpタグが二重にマッチして本文が重複しないことも確認する。
+const ARTICLE_HTML = readFileSync(
+  fileURLToPath(new URL("./__fixtures__/roadster-article.html", import.meta.url)),
+  "utf-8",
+);
+
+describe("parseArticleHtml", () => {
+  const article = parseArticleHtml(ARTICLE_HTML);
+
+  it("extracts the clean title from og:title, not the site-name-prefixed <title> tag", () => {
+    expect(article.title).toBe("マツダ、「マツダ ロードスター」を商品改良");
+  });
+
+  it("extracts body paragraphs without duplicating dt/dd wrapper text", () => {
+    expect(article.bodyText).toContain(
+      "マツダ株式会社（以下、マツダ）は、小型オープンスポーツカー",
+    );
+    expect(article.bodyText).toContain("新たな特別仕様車「PS」を追加しました");
+    expect(article.bodyText).toContain("RAYS社製16インチアルミホイール（ブラック塗装）");
+
+    // "1.	特別仕様車「PS」の追加" は <dt><p>...</p></dt> なので、dt自体もpも
+    // 選択すると同じ文が2回入ってしまう。1回だけ出現することを確認する。
+    const heading = "1. 特別仕様車「PS」の追加";
+    const occurrences = article.bodyText.split(heading).length - 1;
+    expect(occurrences).toBe(1);
+  });
+
+  it("does not pull in nav/footer/script content outside .c-article__conts", () => {
+    expect(article.bodyText).not.toContain("ダウンロード規約");
+    expect(article.bodyText).not.toContain("一覧に戻る");
+    expect(article.bodyText).not.toContain("googletagmanager");
   });
 });
