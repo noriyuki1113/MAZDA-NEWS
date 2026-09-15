@@ -1,0 +1,78 @@
+name: Phase 0 - Site Probe
+
+# Manual investigation of https://newsroom.mazda.com used to fill in src/sources.ts
+# (Phase 0 of mazda-news-spec.md). Not part of the daily pipeline.
+#
+# Run from the Actions tab ("Run workflow") and read the job log. It checks
+# robots.txt, looks for an RSS <link> tag on the release list page, and dumps
+# one article page so the HTML structure (title / date / body) can be read off.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  UA: "mazda-news-en/1.0 (+https://github.com/noriyuki1113/mazda-news)"
+  LIST_URL: "https://newsroom.mazda.com/ja/publicity/release/"
+  ARTICLE_URL: "https://newsroom.mazda.com/ja/publicity/release/2026/202606/260626a.html"
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "1. robots.txt"
+        run: |
+          echo "::group::GET https://newsroom.mazda.com/robots.txt"
+          curl -sS -A "$UA" "https://newsroom.mazda.com/robots.txt"
+          echo "::endgroup::"
+
+      - name: Wait 2s (crawl etiquette)
+        run: sleep 2
+
+      - name: "2. Release list page - RSS discovery"
+        run: |
+          curl -sS -A "$UA" --compressed -L "$LIST_URL" -o list.html
+          echo "Saved $(wc -c < list.html) bytes"
+
+          echo "::group::<link rel=alternate ... rss ...> matches"
+          grep -ioE '<link[^>]*rel=["'"'"']alternate["'"'"'][^>]*>' list.html || echo "(no <link rel=alternate> tags found)"
+          echo "::endgroup::"
+
+          echo "::group::Any tag/attribute mentioning rss (case-insensitive)"
+          grep -ioE '<[a-z]+[^>]*rss[^>]*>' list.html || echo "(no tag containing 'rss' found)"
+          echo "::endgroup::"
+
+          echo "::group::<head> section (first 150 lines) for manual inspection"
+          awk '/<head/{f=1} f{print; n++} /<\/head>/{f=0} n>150{exit}' list.html
+          echo "::endgroup::"
+
+      - name: Wait 2s (crawl etiquette)
+        run: sleep 2
+
+      - name: "3. Article page - DOM structure"
+        run: |
+          curl -sS -A "$UA" --compressed -L "$ARTICLE_URL" -o article.html
+          echo "Saved $(wc -c < article.html) bytes"
+
+          echo "::group::<title> and <meta> tags"
+          grep -ioE '<title>.*</title>' article.html
+          grep -ioE '<meta[^>]*(og:title|og:description|article:published_time|description|date)[^>]*>' article.html
+          echo "::endgroup::"
+
+          echo "::group::Heading tags (h1/h2/h3) with attributes"
+          grep -ioE '<h[123][^>]*>.{0,200}' article.html
+          echo "::endgroup::"
+
+          echo "::group::Elements whose class/id looks like title/date/body/content/article"
+          grep -ioE '<[a-z0-9]+[^>]*(class|id)="[^"]*(title|date|headline|article|body|content|lead|release|text|main)[^"]*"[^>]*>' article.html | sort -u
+          echo "::endgroup::"
+
+          echo "::group::<time> tags"
+          grep -ioE '<time[^>]*>.{0,100}' article.html || echo "(no <time> tags found)"
+          echo "::endgroup::"
+
+          echo "::group::Full raw HTML (for precise structure confirmation)"
+          cat article.html
+          echo "::endgroup::"
