@@ -1110,6 +1110,21 @@
       "excluded": false,
       "excludedReason": null,
       "summarized": false
+    },
+    {
+      "releaseId": "260924a",
+      "urlJa": "https://newsroom.mazda.com/ja/publicity/release/2026/202609/260924a.html",
+      "urlEn": null,
+      "titleJa": "マツダとBE@RBRICKが初コラボレーション、 ル・マン優勝35周年記念「BE@RBRICK × MAZDA 787B」を発売",
+      "titleEn": null,
+      "category": "クルマ・技術",
+      "publishedAt": "2026-09-24",
+      "firstSeenAt": "2026-09-24T01:15:17.254Z",
+      "pairStatus": "ja_only",
+      "pendingUntil": "2026-10-08",
+      "excluded": false,
+      "excludedReason": null,
+      "summarized": false
     }
   ]
 }
