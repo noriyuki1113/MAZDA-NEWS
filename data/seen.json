@@ -1110,6 +1110,36 @@
       "excluded": false,
       "excludedReason": null,
       "summarized": false
+    },
+    {
+      "releaseId": "260924b",
+      "urlJa": "https://newsroom.mazda.com/ja/publicity/release/2026/202609/260924b.html",
+      "urlEn": null,
+      "titleJa": "マツダとENEOS、低炭素燃料の理解促進と普及拡大へ連携",
+      "titleEn": null,
+      "category": "クルマ・技術",
+      "publishedAt": "2026-09-24",
+      "firstSeenAt": "2026-09-25T01:17:40.082Z",
+      "pairStatus": "ja_only",
+      "pendingUntil": "2026-10-09",
+      "excluded": false,
+      "excludedReason": null,
+      "summarized": false
+    },
+    {
+      "releaseId": "260924a",
+      "urlJa": "https://newsroom.mazda.com/ja/publicity/release/2026/202609/260924a.html",
+      "urlEn": null,
+      "titleJa": "マツダとBE@RBRICKが初コラボレーション、 ル・マン優勝35周年記念「BE@RBRICK × MAZDA 787B」を発売",
+      "titleEn": null,
+      "category": "クルマ・技術",
+      "publishedAt": "2026-09-24",
+      "firstSeenAt": "2026-09-25T01:17:40.082Z",
+      "pairStatus": "ja_only",
+      "pendingUntil": "2026-10-09",
+      "excluded": false,
+      "excludedReason": null,
+      "summarized": false
     }
   ]
 }
