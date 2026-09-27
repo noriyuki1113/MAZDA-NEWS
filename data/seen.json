@@ -404,7 +404,7 @@
       "pendingUntil": "2026-09-29",
       "excluded": false,
       "excludedReason": null,
-      "summarized": false
+      "summarized": true
     },
     {
       "releaseId": "260624b",
@@ -434,7 +434,7 @@
       "pendingUntil": "2026-09-29",
       "excluded": false,
       "excludedReason": null,
-      "summarized": false
+      "summarized": true
     },
     {
       "releaseId": "260623a",
@@ -449,7 +449,7 @@
       "pendingUntil": "2026-09-29",
       "excluded": false,
       "excludedReason": null,
-      "summarized": false
+      "summarized": true
     },
     {
       "releaseId": "260608a",
@@ -524,7 +524,7 @@
       "pendingUntil": "2026-09-29",
       "excluded": false,
       "excludedReason": null,
-      "summarized": false
+      "summarized": true
     },
     {
       "releaseId": "260528b",
@@ -554,7 +554,7 @@
       "pendingUntil": "2026-09-29",
       "excluded": false,
       "excludedReason": null,
-      "summarized": false
+      "summarized": true
     },
     {
       "releaseId": "260525a",
@@ -569,7 +569,7 @@
       "pendingUntil": "2026-09-29",
       "excluded": false,
       "excludedReason": null,
-      "summarized": false
+      "summarized": true
     },
     {
       "releaseId": "260521b",
@@ -584,7 +584,7 @@
       "pendingUntil": "2026-09-29",
       "excluded": false,
       "excludedReason": null,
-      "summarized": false
+      "summarized": true
     },
     {
       "releaseId": "260521a",
@@ -599,7 +599,7 @@
       "pendingUntil": "2026-09-29",
       "excluded": false,
       "excludedReason": null,
-      "summarized": false
+      "summarized": true
     },
     {
       "releaseId": "260512c",
@@ -704,7 +704,7 @@
       "pendingUntil": "2026-09-29",
       "excluded": false,
       "excludedReason": null,
-      "summarized": false
+      "summarized": true
     },
     {
       "releaseId": "260402a",
@@ -749,7 +749,7 @@
       "pendingUntil": "2026-09-29",
       "excluded": false,
       "excludedReason": null,
-      "summarized": false
+      "summarized": true
     },
     {
       "releaseId": "260331a",
@@ -1107,6 +1107,36 @@
       "firstSeenAt": "2026-09-15T06:05:45.102Z",
       "pairStatus": "paired",
       "pendingUntil": null,
+      "excluded": false,
+      "excludedReason": null,
+      "summarized": false
+    },
+    {
+      "releaseId": "260924b",
+      "urlJa": "https://newsroom.mazda.com/ja/publicity/release/2026/202609/260924b.html",
+      "urlEn": null,
+      "titleJa": "マツダとENEOS、低炭素燃料の理解促進と普及拡大へ連携",
+      "titleEn": null,
+      "category": "クルマ・技術",
+      "publishedAt": "2026-09-24",
+      "firstSeenAt": "2026-09-27T01:13:59.721Z",
+      "pairStatus": "ja_only",
+      "pendingUntil": "2026-10-11",
+      "excluded": false,
+      "excludedReason": null,
+      "summarized": false
+    },
+    {
+      "releaseId": "260924a",
+      "urlJa": "https://newsroom.mazda.com/ja/publicity/release/2026/202609/260924a.html",
+      "urlEn": null,
+      "titleJa": "マツダとBE@RBRICKが初コラボレーション、 ル・マン優勝35周年記念「BE@RBRICK × MAZDA 787B」を発売",
+      "titleEn": null,
+      "category": "クルマ・技術",
+      "publishedAt": "2026-09-24",
+      "firstSeenAt": "2026-09-27T01:13:59.721Z",
+      "pairStatus": "ja_only",
+      "pendingUntil": "2026-10-11",
       "excluded": false,
       "excludedReason": null,
       "summarized": false
