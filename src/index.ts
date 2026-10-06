@@ -194,14 +194,6 @@ export async function main(now: Date = new Date()): Promise<void> {
     (item) => newReleaseIds.has(item.releaseId) && item.pairStatus === "paired" && !item.excluded,
   );
 
-  if (newJaOnly.length === 0 && newPaired.length === 0 && corrections.length === 0) {
-    // §6 手順8: 配信対象が0件なら「no new items」をログ出力して正常終了（PRは作らない）。
-    // 除外分・en_only分の記録は残すためseen.jsonは更新する。
-    console.log("No new items to distribute today.");
-    await saveSeenStore(SEEN_PATH, store, now);
-    return;
-  }
-
   // 今回の新着に加え、前回までに上限超過で持ち越されたja_onlyも要約対象に含める。
   const carriedOverJaOnly = store.items.filter(
     (item) =>
@@ -245,6 +237,16 @@ export async function main(now: Date = new Date()): Promise<void> {
   const pairedEntries: AlsoFromMazdaEntry[] = newPaired
     .filter((item): item is SeenItem & { urlEn: string; titleEn: string } => Boolean(item.urlEn && item.titleEn))
     .map((item) => ({ titleEn: item.titleEn, urlEn: item.urlEn, publishedAt: item.publishedAt }));
+
+  if (jdmEntries.length === 0 && pairedEntries.length === 0 && corrections.length === 0) {
+    // §6 手順8: 配信対象が0件なら「no new items」をログ出力して正常終了（PRは作らない）。
+    // newJaOnly/newPaired の時点では非0でも、記事取得や要約が全件失敗すれば
+    // ここで0件になり得る。除外分・en_only分・要約失敗の記録は残すため
+    // seen.jsonは更新するが、空のdraftは書かない（PRが空っぽで立つのを防ぐ）。
+    console.log("Nothing left to distribute after summarization; skipping draft/PR.");
+    await saveSeenStore(SEEN_PATH, store, now);
+    return;
+  }
 
   const draft = renderDraft({
     date: toDateOnly(now),

@@ -6,6 +6,7 @@ const fetchListMock = vi.fn();
 const fetchArticleMock = vi.fn();
 const loadSeenStoreMock = vi.fn();
 const saveSeenStoreMock = vi.fn();
+const summarizeArticleMock = vi.fn();
 const writeFileMock = vi.fn().mockResolvedValue(undefined);
 const mkdirMock = vi.fn().mockResolvedValue(undefined);
 
@@ -17,6 +18,11 @@ vi.mock("./fetch.js", () => ({
 vi.mock("./dedupe.js", async () => {
   const actual = await vi.importActual<typeof import("./dedupe.js")>("./dedupe.js");
   return { ...actual, loadSeenStore: loadSeenStoreMock, saveSeenStore: saveSeenStoreMock };
+});
+
+vi.mock("./summarize.js", async () => {
+  const actual = await vi.importActual<typeof import("./summarize.js")>("./summarize.js");
+  return { ...actual, summarizeArticle: summarizeArticleMock };
 });
 
 vi.mock("node:fs/promises", async () => {
@@ -112,5 +118,29 @@ describe("main() — §12 acceptance criteria", () => {
     expect(fetchListMock).toHaveBeenCalledTimes(1); // never even tries the en list
     expect(process.exitCode).toBe(1);
     process.exitCode = 0;
+  });
+
+  it("does not write an empty draft when a new ja_only item is detected but summarization fails for all of it (regression: incident 2026-10-05)", async () => {
+    // 2026-09-24〜10-05に実際に起きた不具合の再現。newJaOnly等の"検出時点での件数"
+    // だけで配信有無を決めると、記事取得/要約が全件失敗した日でも空のdraftが
+    // 書かれてPRが立ってしまう。要約後の実件数で判定しないといけない。
+    const jaItem = listItem("ja", "261006a");
+    fetchListMock.mockResolvedValueOnce([jaItem]).mockResolvedValueOnce([]);
+    loadSeenStoreMock.mockResolvedValue(emptyStore());
+    fetchArticleMock.mockResolvedValue({ title: jaItem.title, bodyText: "本文" });
+    summarizeArticleMock.mockResolvedValue(null); // §7: 2回失敗してスキップ
+
+    const fetchSpy = vi.fn().mockResolvedValue({ ok: false }); // HEAD確認: 英語版なし
+    vi.stubGlobal("fetch", fetchSpy);
+
+    try {
+      await runMain();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+
+    expect(writeFileMock).not.toHaveBeenCalled();
+    expect(saveSeenStoreMock).toHaveBeenCalledTimes(1);
+    expect(process.exitCode).toBeFalsy();
   });
 });
