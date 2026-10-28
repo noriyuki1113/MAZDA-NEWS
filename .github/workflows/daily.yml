@@ -9,8 +9,8 @@ name: Daily Mazda News
 # ネットワーク再取得の話ではなく分類のやり直しであり、コスト的に軽微）。
 
 on:
-  schedule:
-    - cron: "0 23 * * *" # UTC 23:00 = JST 8:00
+  # Automatic daily run paused 2026-10-29 to protect Actions quota.
+  # Run workflow manually when news drafts are needed.
   workflow_dispatch:
 
 permissions:
